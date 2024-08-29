@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-cm
+  namespace: ams-app
+data:
+  db-name: amsdbrest2024
+  init.sql: |
+      # -- Ensure you are using the correct database
+      USE `amsdbrest2024`;
+
+      # -- Create user if not exists (MySQL 8.0+ syntax)
+      CREATE USER IF NOT EXISTS 'marwan'@'%' IDENTIFIED BY 'marwan123';
+
+
+      # -- Revoke existing permissions (optional, if you want to reset all permissions)
+      REVOKE ALL PRIVILEGES ON `amsdbrest2024`.* FROM 'marwan'@'%';
+
+      # -- Grant updated permissions
+      GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX ON `amsdbrest2024`.* TO 'marwan'@'%';
+
+      # -- Apply changes
+      FLUSH PRIVILEGES;
