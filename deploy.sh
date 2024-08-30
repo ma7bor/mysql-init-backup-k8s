@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Check if kubectl is installed
-if ! command -v kubectl &> /dev/null
+# Check if microk8s kubectl is installed
+if ! command -v microk8s kubectl &> /dev/null
 then
-    echo "kubectl could not be found. Please install it first."
+    echo "microk8s kubectl could not be found. Please install microk8s first."
     exit 1
 fi
 
@@ -14,7 +14,7 @@ namespace="ams-app"
 cleanup() {
     echo "Cleaning up resources in namespace $namespace..."
     for file in "${yaml_files[@]}"; do
-        kubectl delete -f "$file" -n "$namespace"
+        microk8s kubectl delete -f "$file" -n "$namespace"
     done
     echo "Cleanup complete."
 }
@@ -39,11 +39,11 @@ fi
 echo "Deployment is starting..."
 
 # Check if the namespace exists, create it if it doesn't
-if ! kubectl get namespace "$namespace" &> /dev/null
+if ! microk8s kubectl get namespace "$namespace" &> /dev/null
 then
     echo "Namespace $namespace does not exist. Creating it..."
-    kubectl create namespace "$namespace"
-    if [ $? -ne 0]; then
+    microk8s kubectl create namespace "$namespace"
+    if [ $? -ne 0 ]; then
         echo "Failed to create namespace $namespace"
         exit 1
     fi
@@ -67,9 +67,9 @@ do
     if [ -f "$file" ]; then
         echo "Applying $file in namespace $namespace..."
         if $verbose_flag; then
-            kubectl apply -f "$file" -n "$namespace"
+            microk8s kubectl apply -f "$file" -n "$namespace"
         else
-            kubectl apply -f "$file" -n "$namespace" &> /dev/null
+            microk8s kubectl apply -f "$file" -n "$namespace" &> /dev/null
         fi
         if [ $? -ne 0 ]; then
             echo "Failed to apply $file"
