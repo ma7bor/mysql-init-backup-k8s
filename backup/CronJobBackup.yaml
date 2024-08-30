@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup
+  namespace: ams-backup
+spec:
+  schedule: "0 20 * * *"  # Run at 8 PM every day
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mysql-backup
+            image: mysql:8.0
+            env:
+              - name: MYSQL_ROOT_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: mysql-secret
+                    key: root-password
+            volumeMounts:
+              - name: backup-storage
+                mountPath: /backup
+            command:
+              - /bin/sh
+              - -c
+              - |
+                mysqldump --all-databases --single-transaction --quick --lock-tables=false -u root -p$MYSQL_ROOT_PASSWORD > /backup/backup-$(date +\%F-\%T).sql
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: mysql-backup-pvc
+          restartPolicy: OnFailure

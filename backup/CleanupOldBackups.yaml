@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup-cleanup
+  namespace: ams-backup
+spec:
+  schedule: "0 1 * * *"  # Run daily at 1 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: cleanup
+            image: busybox
+            volumeMounts:
+              - name: backup-storage
+                mountPath: /backup
+            command:
+              - /bin/sh
+              - -c
+              - "find /backup/* -mtime +7 -exec rm {} \\;"  # Deletes files older than 7 days
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: mysql-backup-pvc
+          restartPolicy: OnFailure

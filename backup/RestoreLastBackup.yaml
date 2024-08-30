@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mysql-restore
+  namespace: ams-backup
+spec:
+  template:
+    spec:
+      containers:
+      - name: mysql-restore
+        image: mysql:8.0
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: root-password
+        volumeMounts:
+          - name: backup-storage
+            mountPath: /backup
+        command:
+          - /bin/sh
+          - -c
+          - |
+            mysql -u root -p$MYSQL_ROOT_PASSWORD < /backup/latest-backup.sql  # Adjust this to the correct file
+      volumes:
+      - name: backup-storage
+        persistentVolumeClaim:
+          claimName: mysql-backup-pvc
+      restartPolicy: OnFailure
