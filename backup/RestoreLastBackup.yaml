@@ -13,8 +13,22 @@ spec:
           - name: MYSQL_ROOT_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: mysql-secret
+                name: db-secrets
                 key: root-password
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: db-secrets
+                key: user-username
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: db-secrets
+                key: user-password
+          - name: MYSQL_HOST
+            value: "mysql-service"  # Replace with the actual MySQL service name
+          - name: MYSQL_NAMESPACE
+            value: "mysql-namespace"  # Replace with the namespace where MySQL is running
         volumeMounts:
           - name: backup-storage
             mountPath: /backup
@@ -22,7 +36,7 @@ spec:
           - /bin/sh
           - -c
           - |
-            mysql -u root -p$MYSQL_ROOT_PASSWORD < /backup/latest-backup.sql  # Adjust this to the correct file
+            mysql -h mysql-service.mysql-namespace.svc.cluster.local -u $MYSQL_USER -p$MYSQL_PASSWORD ams-app < /backup/latest-backup.sql
       volumes:
       - name: backup-storage
         persistentVolumeClaim:

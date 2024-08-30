@@ -4,7 +4,7 @@ metadata:
   name: mysql-backup-cleanup
   namespace: ams-backup
 spec:
-  schedule: "0 1 * * *"  # Run daily at 1 AM
+  schedule: "*/30 * * * *"  # Every 30 minutes
   jobTemplate:
     spec:
       template:
@@ -18,7 +18,7 @@ spec:
             command:
               - /bin/sh
               - -c
-              - "find /backup/* -mtime +7 -exec rm {} \\;"  # Deletes files older than 7 days
+              - "find /backup/* -mmin +30 -exec rm {} \\;"  # Deletes files older than 30 minutes
           volumes:
           - name: backup-storage
             persistentVolumeClaim:

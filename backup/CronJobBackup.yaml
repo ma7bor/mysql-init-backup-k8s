@@ -4,7 +4,7 @@ metadata:
   name: mysql-backup
   namespace: ams-backup
 spec:
-  schedule: "0 20 * * *"  # Run at 8 PM every day
+  schedule: "*/5 * * * *"  # Every 5 minutes
   jobTemplate:
     spec:
       template:
@@ -16,8 +16,22 @@ spec:
               - name: MYSQL_ROOT_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: mysql-secret
+                    name: db-secrets
                     key: root-password
+              - name: MYSQL_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: db-secrets
+                    key: user-username
+              - name: MYSQL_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: db-secrets
+                    key: user-password
+              - name: MYSQL_HOST
+                value: "mysql-service"  # Replace with the actual MySQL service name
+              - name: MYSQL_NAMESPACE
+                value: "mysql-namespace"  # Replace with the namespace where MySQL is running
             volumeMounts:
               - name: backup-storage
                 mountPath: /backup
@@ -25,7 +39,7 @@ spec:
               - /bin/sh
               - -c
               - |
-                mysqldump --all-databases --single-transaction --quick --lock-tables=false -u root -p$MYSQL_ROOT_PASSWORD > /backup/backup-$(date +\%F-\%T).sql
+                mysqldump -h mysql-service.mysql-namespace.svc.cluster.local -u $MYSQL_USER -p$MYSQL_PASSWORD ams-app --single-transaction --quick --lock-tables=false > /backup/backup-$(date +\%F-\%T).sql
           volumes:
           - name: backup-storage
             persistentVolumeClaim:
